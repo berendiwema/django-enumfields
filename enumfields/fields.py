@@ -29,9 +29,9 @@ class EnumFieldMixin(six.with_metaclass(models.SubfieldBase)):
             return self.enum(value)
         except ValueError:
             for m in self.enum:
-               if value == m:
+                if value == m:
                     return value
-               if value == m.value or str(value) == str(m.value):
+                elif value == m.value or str(value) == str(m.value):
                     return m
 
             raise ValidationError('%s is not a valid value for enum %s' % (value, self.enum))
