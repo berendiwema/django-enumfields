@@ -19,14 +19,18 @@ class EnumFieldMixin(six.with_metaclass(models.SubfieldBase)):
         super(EnumFieldMixin, self).__init__(choices=choices, max_length=max_length, **options)
 
     def to_python(self, value):
-        if not value:
+        if value is None or (isinstance(value, six.string_types) and len(value) == 0):
             return None
-        for m in self.enum:
-            if value == m:
-                return value
-            if value == m.value or str(value) == str(m.value) or str(value) == str(m):
-                return m
-        raise ValidationError('%s is not a valid value for enum %s' % (value, self.enum))
+        try:
+            return self.enum(value)
+        except ValueError:
+            for m in self.enum:
+               if value == m:
+                    return value
+               if value == m.value or str(value) == str(m.value):
+                    return m
+
+            raise ValidationError('%s is not a valid value for enum %s' % (value, self.enum))
 
     def get_prep_value(self, value):
         return None if value is None else value.value
@@ -69,6 +73,13 @@ class EnumIntegerField(EnumFieldMixin, models.IntegerField):
             return value.value
         else:
             return int(value)
+
+    def to_python(self, value):
+        if isinstance(value, Enum):
+            value = value.value
+        elif isinstance(value, six.string_types):
+            value = int(value)
+        return super(EnumFieldMixin,self).to_python(value)
 
 
 # South compatibility stuff
