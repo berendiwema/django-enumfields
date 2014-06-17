@@ -14,7 +14,11 @@ class EnumFieldMixin(six.with_metaclass(models.SubfieldBase)):
         else:
             self.enum = enum
 
-        choices = [(i, i.name) for i in self.enum]  # choices for the TypedChoiceField
+        if not choices:
+            try:
+                choices = self.enum.choices()
+            except AttributeError:
+                choices = [(m.value, getattr(m, 'label', m.name)) for m in self.enum]
 
         super(EnumFieldMixin, self).__init__(choices=choices, max_length=max_length, **options)
 
@@ -79,6 +83,7 @@ class EnumIntegerField(EnumFieldMixin, models.IntegerField):
             value = value.value
         elif isinstance(value, six.string_types):
             value = int(value)
+
         return super(EnumFieldMixin,self).to_python(value)
 
 
